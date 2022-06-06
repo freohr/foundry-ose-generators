@@ -18,33 +18,17 @@
       "name": "Freohr"
     }
   ],
+  "system": [
+    "ose"
+  ],
   "dependencies": [
-
+    "ose-content"
   ],
-  "conflicts": [
-    
-  ],
+  "conflicts": [],
   "esmodules": [
     "scripts/module.js"
   ],
-  "scripts": [
-    "scripts/lib/lib.js"
-  ],
   "packs": [
-    {
-      "name": "maps",
-      "label": "OSE Generators",
-      "path": "/packs/maps.db",
-      "entity": "Scene",
-      "type": "Scene"
-    },
-    {
-      "name": "journals",
-      "label": "OSE Generators",
-      "path": "/packs/journals.db",
-      "entity": "JournalEntry",
-      "type": "JournalEntry"
-    },
     {
       "name": "items",
       "label": "OSE Generators",
@@ -66,5 +50,5 @@
       "entity": "Macro",
       "type": "Macro"
     }
-  ],
+  ]
 }
