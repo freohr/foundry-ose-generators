@@ -7,6 +7,8 @@ It includes premade macros for the predefined [Treasure Maps](https://oldschoole
 
 I worked on this for less than a dozen hours, so it can only generate hoards containing gems and jewellery for now (I started this because I didn't want to manually create the hoard for a Type 2 treasure map). Still, the generator should spit out error notifications when it encounters bad Roll formulas or unknown item types.
 
+Also for now, the description are in French (because I am French, as indicated by my Github profile).
+
 ## How to Use
 
 The generator does its magic by calling the `OSEGen.TreasureMaps.generateTreasurePile(pileName, pileConfiguration)` function, passing it the name of the resulting hoard, and a configuration object to define what the hoard contains (in the same way that FoundryVTT defines data for its `Actor.create()` or `Item.create()` methods).
@@ -33,7 +35,7 @@ OSEGen.TreasureMaps.generateTreasurePile("Treasure Map 2", {gems:"1d6*10", jewel
 
 ## Planned ToDo
 
-THis is what I thought of adding to this module, not in any strict chronological order
+This is what I thought of adding to this module, not in any strict chronological order
 
 - [ ] Add other types of items to the hoard generator
 - [ ] Find out how to enable "ItemPile" status on a generated hoard (for use with the ItemPile module)
@@ -45,4 +47,4 @@ THis is what I thought of adding to this module, not in any strict chronological
 
 - Gavin Norman for OSE
 - The peeps in the "Unofficial Old School Essentials for Foundry VTT" Discord for taking over maintenance and developpement of the module.
-- [/u/Ecktheo](old.reddit.com/u/Ecktheo)'s [Valuables Description Tables](https://www.reddit.com/r/osr/comments/uxiez6/revised_valuables_tables/) (I used that for the Jewellery description)
+- [/u/Ecktheo](https://old.reddit.com/u/Ecktheo)'s [Valuables Description Tables](https://www.reddit.com/r/osr/comments/uxiez6/revised_valuables_tables/) (I used that for the Jewellery description)
