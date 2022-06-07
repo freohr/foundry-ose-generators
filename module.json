@@ -22,7 +22,8 @@
     "ose"
   ],
   "dependencies": [
-    "ose-content"
+    "ose-content",
+    "compendium-folders"
   ],
   "conflicts": [],
   "esmodules": [
