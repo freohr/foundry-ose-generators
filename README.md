@@ -7,8 +7,6 @@ It includes premade macros for the predefined [Treasure Maps](https://oldschoole
 
 I worked on this for less than a dozen hours, so it can only generate hoards containing gems and jewellery for now (I started this because I didn't want to manually create the hoard for a Type 2 treasure map). Still, the generator should spit out error notifications when it encounters bad Roll formulas or unknown item types.
 
-Also for now, the description are in French (because I am French, as indicated by my Github profile).
-
 ## How to Use
 
 The generator does its magic by calling the `OSEGen.TreasureMaps.generateTreasurePile(pileName, pileConfiguration)` function, passing it the name of the resulting hoard, and a configuration object to define what the hoard contains (in the same way that FoundryVTT defines data for its `Actor.create()` or `Item.create()` methods).
@@ -18,7 +16,11 @@ Example for a Type 2 Treasure map. You simply put this in a macro, then run it; 
 OSEGen.TreasureMaps.generateTreasurePile("Treasure Map 2", {gems:"1d6*10", jewellery:"2d10"});
 ```
 
-**Small note:** I included a little bit a variance (between 95 and 105% of generated cost) for Jewellery generation to break out of the basic and predictable `3d6*100` gp cost suggested in the OSE rules.
+Output for the above macro:
+
+![](assets/hoard_treasure_map_2.png)
+
+**Small note:** I included a little bit a variance (between 95 and 105% of generated cost) for Gems and Jewellery generation to break out of the basic and predictable `3d6*100` gp cost suggested in the OSE rules.
 
 ### Expected format for the configuration object
 
