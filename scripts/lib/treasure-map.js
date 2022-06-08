@@ -54,7 +54,7 @@ class TreasureMapInternal {
                         return Promise.reject(invalidFormulaError(formula));
                     }
                     const nbGems = Roll.create(formula).evaluate({ async: false });
-                    return TreasureMapInternal._generateGemItemData(nbGems.total);
+                    return this._generateGemItemData(nbGems.total);
                 }
                 case "jewellery": {
                     const formula = value;
@@ -62,7 +62,7 @@ class TreasureMapInternal {
                         return Promise.reject(invalidFormulaError(formula));
                     }
                     const nbJwl = Roll.create("2d10").evaluate({ async: false });
-                    return TreasureMapInternal._generateJewelryItemsData(nbJwl.total)
+                    return this._generateJewelryItemsData(nbJwl.total)
                 }
                 default:
                     return Promise.reject(unsupportedItemTypeError(key));
@@ -82,9 +82,16 @@ class TreasureMapInternal {
      */
     static async _getRollTableFromCompendium(packName, tableName) {
         const pack = game.packs.get(packName);
-        const entry = pack.index.getName(tableName);
-        const table = await pack.getDocument(entry._id);
+        if (!pack) {
+            return Promise.reject(`Pack "${packName}" not found`);
+        }
 
+        const entry = pack.index.getName(tableName);
+        if (!entry) {
+            return Promise.reject(`Table "${tableName}" not found in compendium pack "${packName}"`);
+        }
+
+        const table = await pack.getDocument(entry._id);
         return table;
     }
 
@@ -94,8 +101,13 @@ class TreasureMapInternal {
      * @returns {Item} the corresponding Item data
      */
     static async _findItem(itemData) {
-        let itemValue = itemData.data.collection + "." + itemData.data.resultId;
-        let foundItem = await fromUuid(itemValue);
+        const itemValue = itemData.data.collection + "." + itemData.data.resultId;
+
+        const foundItem = fromUuid(itemValue)
+            .then(item => item)
+            .catch(reason => {
+                return Promise.reject(`Item "${itemValue}" not found. Reason: "${reason}"`);
+            });
         return foundItem;
     }
 
@@ -122,10 +134,10 @@ class TreasureMapInternal {
 
     /**
      *
-     * @param {String} tableName: which table we get the items from
+     * @param {Object} tableData: which compendium and/or table we get the items from
      * @param {Integer} quantity: how many items we want
      */
-    static _generateItemDataFromRollTable(tableName, quantity) {
+    static _generateItemDataFromRollTable(tableData = { compendium: "", table: "" }, quantity = 1) {
 
     }
 
@@ -153,27 +165,27 @@ class TreasureMapInternal {
             switch (gemValue) {
                 default:
                 case 10:
-                    return "Pierres semi-précieuses [valeur basse]";
+                    return "Semi-precious Stones [low value]";
                 case 50:
-                    return "Pierres semi-précieuses [valeur moyenne]";
+                    return "Semi-precious Stones [medium value]";
                 case 100:
-                    return "Pierres semi-précieuses [valeur élevée]";
+                    return "Semi-precious Stones [high value]";
                 case 500:
                 case 1000:
-                    return "Pierre Précieuse";
+                    return "Precious Gem";
             }
         })();
 
         const gemLookupTable = await this._getRollTableFromCompendium("foundry-ose-generators.rolltables", gemLookupTableName);
-        const gemCutTable = await this._getRollTableFromCompendium("foundry-ose-generators.rolltables", "Apparence de Gemme");
+        const gemCutTable = await this._getRollTableFromCompendium("foundry-ose-generators.rolltables", "Gem Appearance");
 
         const fullGemName = (await gemLookupTable.draw({ rollMode: "gmroll", displayChat: false })).results[0];
         const gemName = fullGemName.data.text;
 
         const gemStoneDesc = (() => {
-            if (gemLookupTableName.match("semi-précieuses")) {
+            if (gemLookupTableName.match("Semi-precious")) {
                 // Semi-precious stones
-                return gemName.match(/\[(?<desc>.*)\]/).groups.desc;;
+                return gemName.match(/\[(?<desc>.*)\]/).groups.desc;
             } else {
                 // Precious stones
                 return gemName;
@@ -182,21 +194,21 @@ class TreasureMapInternal {
 
         const gemCut = (await gemCutTable.draw({ rollMode: "gmroll", displayChat: false })).results;
 
-        const valueMultStr = gemCut[1].data.text.match(/\[.*x(?<mult>.*)\]/).groups.mult;
-        const valueMult = eval(valueMultStr);
+        const valueMultStr = gemCut[1].data.text.match(/\[.*x(?<mult>.*)\]/)?.groups.mult ?? "1";
+        const valueMult = eval(valueMultStr.trim());
 
-        const gemSizes = gemCut[1].data.text.match(/\(Précieuse: (?<precious>.*)\/Semi-précieuse: (?<semiprecious>.*)\)/).groups;
+        const gemSizes = gemCut[1].data.text.match(/\(Precious:(?<precious>.*)\/.*Semi-precious:(?<semiprecious>.*)\)/).groups;
         const gemSize = (() => {
-            if (gemLookupTableName.match("semi-précieuses")) {
+            if (gemLookupTableName.match("Semi-precious")) {
                 // Semi-precious stones
-                return gemSizes.semiprecious;
+                return gemSizes.semiprecious.trim();
             } else {
                 // Precious stones
-                return gemSizes.precious;
+                return gemSizes.precious.trim();
             }
         })();
 
-        const descString = `Un(e) ${gemStoneDesc} de la taille d'un(e) ${gemSize}, taillée en forme de ${gemCut[2].data.text} ${gemCut[0].data.text}`;
+        const descString = `A ${gemStoneDesc} the size of a ${gemSize}, cut in the shape of a ${gemCut[0].data.text} ${gemCut[2].data.text} `;
 
         const gemDetailObject = {
             name: gemName.replace(/\s*\[.*\]/g, ""),
@@ -204,7 +216,7 @@ class TreasureMapInternal {
             img: fullGemName.icon,
             data: {
                 description: descString,
-                cost: Math.trunc(gemValue * valueMult),
+                cost: Math.trunc(this._applyVariance(gemValue * valueMult)),
                 treasure: true
             }
         }
@@ -214,7 +226,7 @@ class TreasureMapInternal {
 
     // Jewellery Stuff
     static _generateJewelryItemsData(quantity) {
-        const generatedJwlry = this._getRollTableFromCompendium("foundry-ose-generators.rolltables", "Bijoux")
+        const generatedJwlry = this._getRollTableFromCompendium("foundry-ose-generators.rolltables", "Jewellery")
             .then((table) => {
                 return Array.from({ length: quantity }, () => {
                     return this._generateJewelryItemDetailData(table);
@@ -244,15 +256,20 @@ class TreasureMapInternal {
             data: {
                 description: fullDesc,
                 treasure: true,
-                cost: TreasureMapInternal._generateJewelryValue()
+                cost: this._generateJewelryValue()
             }
         };
         return itemData;
     }
 
     static _generateJewelryValue() {
+        const value = Math.trunc(Roll.create("3d6*100").evaluate({ async: false }).total);
+        return this._applyVariance(value);
+    }
+
+    static _applyVariance(value) {
         const variance = Roll.create("95+1d10").evaluate({ async: false }).total;
-        const value = Math.trunc(Roll.create("3d6*100").evaluate({ async: false }).total * variance / 100);
-        return value;
+        return Math.trunc(value * variance / 100);
+
     }
 }
